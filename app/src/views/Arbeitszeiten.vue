@@ -1,6 +1,6 @@
 <template>
-  <div class="home">
-    home
+  <div class="zeiten">
+    Arbeitszeiten
   </div>
 </template>
 
