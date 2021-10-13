@@ -10,14 +10,14 @@
         @click="leftDrawerOpen = !leftDrawerOpen"
       />
 
-      <q-toolbar-title >
-        <q-breadcrumbs  active-color="white">
+      <q-toolbar-title>
+        <q-breadcrumbs active-color="white">
           <q-breadcrumbs-el label="MyDashboard" />
           <q-breadcrumbs-el :label="route.name" />
         </q-breadcrumbs>
       </q-toolbar-title>
 
-      <q-btn flat round dense icon="logout" />
+      <q-btn flat round dense icon="logout" @click="logOut" />
     </q-toolbar>
   </q-header>
 
@@ -55,7 +55,21 @@
 <script setup>
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { supabase } from '../supabase';
+import { useStore } from 'vuex';
+
 
 const leftDrawerOpen = ref(false);
 const route = useRoute();
+const store = useStore();
+
+
+const logOut = async () => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  } catch (error) {
+    console.log(error);
+  }
+};
 </script>
