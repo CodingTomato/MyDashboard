@@ -21,7 +21,7 @@
     </q-toolbar>
   </q-header>
 
-  <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-grey-2">
+  <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
     <q-list>
       <q-item-label header>Navigation</q-item-label>
       <q-item clickable tag="router-link" to="/">
@@ -56,19 +56,20 @@
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { supabase } from '../supabase';
-import { useStore } from 'vuex';
+import { store } from '../store';
 
 
 const leftDrawerOpen = ref(false);
 const route = useRoute();
-const store = useStore();
 
 
 const logOut = async () => {
   try {
+    store.user = null;
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   } catch (error) {
+    store.user = null;
     console.log(error);
   }
 };

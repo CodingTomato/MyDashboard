@@ -1,11 +1,9 @@
 <template>
   <div class="home">
-    {{ store.state.user }}
+    {{ store.user }}
   </div>
 </template>
 
 <script setup>
-import { useStore } from 'vuex';
-
-const store = useStore();
+import { store } from '../store';
 </script>

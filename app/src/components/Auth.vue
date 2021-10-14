@@ -1,72 +1,69 @@
 <template>
-  <form class="row flex flex-center" @submit.prevent="">
-    <div class="col-6 form-widget">
-      <h1 class="header">Supabase + Vue 3</h1>
-      <div>
-        <input class="inputField" type="email" placeholder="Your email" v-model="email" />
-        <input class="inputField" type="password" placeholder="Password" v-model="password" />
+  <q-layout view="hHh lpR fFf">
+    <q-page-container>
+      <div class="q-pa-md">
+        <div class="row" style="height: 100vh">
+          <div class="col"></div>
+          <div class="col-8 col-lg-4 self-center">
+            <q-card class="my-card bg-secondary text-white">
+              <q-card-section>
+                <div class="text-h6">MyDashboard</div>
+                <div class="text-subtitle2">{{ loading ? 'Einloggen...' : 'Bitte einloggen' }}</div>
+              </q-card-section>
+
+              <q-card-section>
+                <q-input filled v-model="email" label="E-Mail" style="margin-bottom: .5em"/>
+                <q-input filled v-model="password" type="password" label="Password" />
+              </q-card-section>
+
+              <q-separator dark />
+
+              <q-card-actions>
+                <q-btn
+                  flat
+                  :value="loading ? 'Lade...' : 'Einloggen'"
+                  :disabled="loading"
+                  @click="handleLogin"
+                >Einloggen</q-btn>
+              </q-card-actions>
+            </q-card>
+          </div>
+          <div class="col"></div>
+        </div>
       </div>
-      <div>
-        <input
-          type="submit"
-          class="button block"
-          :value="loading ? 'Loading' : 'Login'"
-          :disabled="loading"
-          @click="handleLogin"
-        />
-        <input
-          type="submit"
-          class="button block"
-          :value="loading ? 'Loading' : 'Register'"
-          :disabled="loading"
-          @click="handleSignUp"
-        />
-      </div>
-    </div>
-  </form>
+    </q-page-container>
+  </q-layout>
 </template>
 
-<script>
+<script setup>
 import { ref } from "vue"
 import { supabase } from "../supabase"
 
-export default {
-  setup() {
-    const loading = ref(false)
-    const email = ref("")
-    const password = ref("")
+const loading = ref(false)
+const email = ref("")
+const password = ref("")
 
-    const handleLogin = async () => {
-      try {
-        loading.value = true;
-        const { error } = await supabase.auth.signIn({ email: email.value, password: password.value });
-        if (error) throw error;
-      } catch (error) {
-        alert(error.error_description || error.message);
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    const handleSignUp = async () => {
-      try {
-        loading.value = true;
-        const { error } = await supabase.auth.signUp({ email: email.value, password: password.value });
-        if (error) throw error;
-      } catch (error) {
-        alert(error.error_description || error.message);
-      } finally {
-        loading.value = false;
-      }
-    }
-
-    return {
-      loading,
-      email,
-      password,
-      handleLogin,
-      handleSignUp,
-    }
-  },
+const handleLogin = async () => {
+  try {
+    loading.value = true;
+    const { error } = await supabase.auth.signIn({ email: email.value, password: password.value });
+    if (error) throw error;
+  } catch (error) {
+    alert(error.error_description || error.message);
+  } finally {
+    loading.value = false;
+  }
 }
+
+// const handleSignUp = async () => {
+//   try {
+//     loading.value = true;
+//     const { error } = await supabase.auth.signUp({ email: email.value, password: password.value });
+//     if (error) throw error;
+//   } catch (error) {
+//     alert(error.error_description || error.message);
+//   } finally {
+//     loading.value = false;
+//   }
+// }
 </script>

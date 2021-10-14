@@ -1,8 +1,8 @@
 <template>
-  <q-layout view="lHh Lpr lFf" v-if="store.state.user">
+  <q-layout view="lHh lpR fFf" v-if="store.user">
     <Header />
     <q-page-container>
-      <router-view></router-view>
+      <router-view class="content"></router-view>
     </q-page-container>
   </q-layout>
   <Auth v-else />
@@ -10,17 +10,22 @@
 
 <script setup>
 import Header from './components/Header.vue';
-import Auth from "./components/Auth.vue"
-import { useStore } from 'vuex';
+import Auth from './components/Auth.vue';
+import { store } from './store';
 import { supabase } from "./supabase"
-import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 
-const store = useStore();
-const router = useRouter();
+const q = useQuasar();
+q.dark.set(true);
 
-store.state.user = supabase.auth.user();
+store.user = supabase.auth.user();
 supabase.auth.onAuthStateChange((_, session) => {
-  store.dispatch('setUser', { user: session.user });
-  setTimeout(() => { router.push({name: "Arbeitszeiten"}) }, 2500);
+  store.user = session.user;
 });
 </script>
+
+<style scoped>
+  .content {
+    margin: .5em;
+  }
+</style>
