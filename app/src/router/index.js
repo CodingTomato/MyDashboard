@@ -25,7 +25,6 @@ router.beforeEach((to, from, next) => {
   // if (to.name !== 'Login' && !(store.state.user)) next({ name: 'Login' })
   // else if (to.name === 'Login' && store.state.user) next({ name: 'Überblick' })
   // else next()
-  console.log(store);
   next();
 })
 
