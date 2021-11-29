@@ -9,11 +9,11 @@
 </template>
 
 <script setup>
+import { useQuasar } from 'quasar';
 import Header from './components/Header.vue';
 import Auth from './components/Auth.vue';
 import { store } from './store';
-import { supabase } from "./supabase"
-import { useQuasar } from 'quasar';
+import { supabase } from './supabase';
 
 const q = useQuasar();
 q.dark.set(true);
@@ -25,7 +25,7 @@ supabase.auth.onAuthStateChange((_, session) => {
 </script>
 
 <style scoped>
-  .content {
-    margin: .5em;
-  }
+.content {
+  margin: 0.5em;
+}
 </style>

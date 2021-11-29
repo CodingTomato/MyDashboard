@@ -1,7 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 import Arbeitszeiten from '../views/Arbeitszeiten.vue';
-import { store } from '../store';
+import Invoives from '../views/Invoices.vue';
 
 const routes = [
   {
@@ -14,18 +14,16 @@ const routes = [
     name: 'Arbeitszeiten',
     component: Arbeitszeiten,
   },
+  {
+    path: '/rechnungen',
+    name: 'Aufträge',
+    component: Invoives,
+  },
 ];
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
 });
-
-router.beforeEach((to, from, next) => {
-  // if (to.name !== 'Login' && !(store.state.user)) next({ name: 'Login' })
-  // else if (to.name === 'Login' && store.state.user) next({ name: 'Überblick' })
-  // else next()
-  next();
-})
 
 export default router;

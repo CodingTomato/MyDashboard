@@ -12,7 +12,6 @@
 
       <q-toolbar-title>
         <q-breadcrumbs active-color="white">
-          <q-breadcrumbs-el label="MyDashboard" />
           <q-breadcrumbs-el :label="route.name" />
         </q-breadcrumbs>
       </q-toolbar-title>
@@ -40,6 +39,14 @@
           <q-item-label>Arbeitszeiten</q-item-label>
         </q-item-section>
       </q-item>
+      <q-item clickable tag="router-link" to="/rechnungen">
+        <q-item-section avatar>
+          <q-icon name="mdi-receipt" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Aufträge</q-item-label>
+        </q-item-section>
+      </q-item>
       <q-item disabled>
         <q-item-section avatar>
           <q-icon name="mdi-discord" />
@@ -58,10 +65,8 @@ import { useRoute } from 'vue-router';
 import { supabase } from '../supabase';
 import { store } from '../store';
 
-
 const leftDrawerOpen = ref(false);
 const route = useRoute();
-
 
 const logOut = async () => {
   try {
