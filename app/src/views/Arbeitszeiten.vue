@@ -42,7 +42,15 @@
             <q-list padding>
               <q-item tag="label" v-for="pack in unfinishedWorkingPackages" :key="pack.id">
                 <q-item-section>
-                  <q-item-label>{{ categoriesMap.get(pack.category) }} &bull; {{ ((((new Date(Date.now()) - (new Date(pack.time_start))) / 1000) / 60) / 60).toFixed(1) }} Std.</q-item-label>
+                  <q-item-label
+                    >{{ categoriesMap.get(pack.category) }} &bull;
+                    {{
+                      ((new Date(Date.now()) - new Date(pack.time_start)) / 1000 / 60 / 60).toFixed(
+                        1,
+                      )
+                    }}
+                    Std.</q-item-label
+                  >
                 </q-item-section>
                 <q-item-section side>
                   <q-btn
@@ -67,10 +75,10 @@
               <q-item>
                 <q-item-section>
                   <q-item-label>Monat</q-item-label>
-                  <q-item-label
-                    caption
-                    lines="2"
-                  >{{ (((workDurationMonth / 1000) / 60) / 60).toFixed(1) }} Stunden / ca. 40 Stunden</q-item-label>
+                  <q-item-label caption lines="2"
+                    >{{ (workDurationMonth / 1000 / 60 / 60).toFixed(1) }} Stunden / ca. 40
+                    Stunden</q-item-label
+                  >
                 </q-item-section>
               </q-item>
 
@@ -79,9 +87,10 @@
               <q-item>
                 <q-item-section>
                   <q-item-label>Woche</q-item-label>
-                  <q-item-label
-                    caption
-                  >{{ (((workDurationWeek / 1000) / 60) / 60).toFixed(1) }} Stunden / ca. 10 Stunden</q-item-label>
+                  <q-item-label caption
+                    >{{ (workDurationWeek / 1000 / 60 / 60).toFixed(1) }} Stunden / ca. 10
+                    Stunden</q-item-label
+                  >
                 </q-item-section>
               </q-item>
 
@@ -90,9 +99,12 @@
               <q-item>
                 <q-item-section>
                   <q-item-label>Geld</q-item-label>
-                  <q-item-label
-                    caption
-                  >{{ ((((workDurationMonth / 1000) / 60) / 60) * 11.125).toFixed(2) }} €</q-item-label>
+                  <q-item-label caption
+                    >{{
+                      ((workDurationMonth / 1000 / 60 / 60) * 11.125).toFixed(2)
+                    }}
+                    €</q-item-label
+                  >
                 </q-item-section>
               </q-item>
             </q-list>
@@ -133,14 +145,14 @@ const workDurationWeek = ref(0);
 
 async function getFinishedWorkpackages() {
   try {
-    store.user = supabase.auth.user()
+    store.user = supabase.auth.user();
 
-    let { data, error, status } = await supabase
-      .from("workpackage")
-      .select(`user_id, time_start, time_end, category`)
+    const { data, error, status } = await supabase
+      .from('workpackage')
+      .select('user_id, time_start, time_end, category');
     // .neq('time_end', 'NULL')
 
-    if (error && status !== 406) throw error
+    if (error && status !== 406) throw error;
 
     if (data) {
       workDurationWeek.value = 0;
@@ -154,67 +166,72 @@ async function getFinishedWorkpackages() {
       const numberOfDays = Math.floor((currentdate - oneJan) / (24 * 60 * 60 * 1000));
       const currentWeek = Math.ceil((currentdate.getDay() + 1 + numberOfDays) / 7);
 
-      rows.value = data.map((pack) => {
-        const packDate = new Date(pack.time_start);
-        const oneJan = new Date(packDate.getFullYear(), 0, 1);
-        const numberOfDays = Math.floor((packDate - oneJan) / (24 * 60 * 60 * 1000));
-        const packWeek = Math.ceil((packDate.getDay() + 1 + numberOfDays) / 7);
+      rows.value = data
+        .map((pack) => {
+          const packDate = new Date(pack.time_start);
+          const oneJan = new Date(packDate.getFullYear(), 0, 1);
+          const numberOfDays = Math.floor((packDate - oneJan) / (24 * 60 * 60 * 1000));
+          const packWeek = Math.ceil((packDate.getDay() + 1 + numberOfDays) / 7);
 
-        const packDuration = pack.time_end ? (new Date(pack.time_end)) - (new Date(pack.time_start)) : (new Date(Date.now())) - (new Date(pack.time_start))
+          const packDuration = pack.time_end
+            ? new Date(pack.time_end) - new Date(pack.time_start)
+            : new Date(Date.now()) - new Date(pack.time_start);
 
-        if (packDate.getMonth() === currentMonth && pack.category == 1) workDurationMonth.value += packDuration;
-        if (packWeek === currentWeek && pack.category == 1) workDurationWeek.value += packDuration;
+          if (packDate.getMonth() === currentMonth && pack.category == 1) workDurationMonth.value += packDuration;
+          if (packWeek === currentWeek && pack.category == 1) workDurationWeek.value += packDuration;
 
-        return {
-          name: categoriesMap.value.get(pack.category),
-          date: new Date(pack.time_start),
-          time_start: new Date(pack.time_start),
-          time_end: pack.time_end ? new Date(pack.time_end) : new Date(Date.now()),
-          duration: pack.time_end ? (new Date(pack.time_end)) - (new Date(pack.time_start)) : (new Date(Date.now())) - (new Date(pack.time_start))
-        }
-      })
+          return {
+            name: categoriesMap.value.get(pack.category),
+            date: new Date(pack.time_start),
+            time_start: new Date(pack.time_start),
+            time_end: pack.time_end ? new Date(pack.time_end) : new Date(Date.now()),
+            duration: pack.time_end
+              ? new Date(pack.time_end) - new Date(pack.time_start)
+              : new Date(Date.now()) - new Date(pack.time_start),
+          };
+        })
         .sort((a, b) => {
           const startDateA = new Date(a.time_start);
           const startDateB = new Date(b.time_start);
 
           if (startDateA === startDateB) return 0;
           if (startDateB < startDateA) return -1;
-          else if (startDateB > startDateA) return 1;
+          if (startDateB > startDateA) return 1;
         });
     }
   } catch (error) {
-    alert(error.message)
+    alert(error.message);
   }
 }
 
 async function getUnfinishedWorkpackage() {
   try {
-    store.user = supabase.auth.user()
+    store.user = supabase.auth.user();
 
-    let { data, error, status } = await supabase
-      .from("workpackage")
-      .select(`id, user_id, time_start, time_end, category`)
-      .is('time_end', 'NULL')
+    const { data, error, status } = await supabase
+      .from('workpackage')
+      .select('id, user_id, time_start, time_end, category')
+      .is('time_end', null);
 
-    if (error && status !== 406) throw error
+    if (error && status !== 406) throw error;
 
     if (data) {
-      unfinishedWorkingPackages.value = data.map((pack) => (pack));
+      unfinishedWorkingPackages.value = data.map((pack) => pack);
     }
   } catch (error) {
-    alert(error.message)
+    alert(error.message);
   }
 }
 
 async function getWorkpackagesCategories() {
   try {
-    store.user = supabase.auth.user()
+    store.user = supabase.auth.user();
 
-    let { data, error, status } = await supabase
-      .from("workpackage_categories")
-      .select(`id, name`)
+    const { data, error, status } = await supabase
+      .from('workpackage_categories')
+      .select('id, name');
 
-    if (error && status !== 406) throw error
+    if (error && status !== 406) throw error;
 
     if (data) {
       data.forEach((category) => {
@@ -223,22 +240,22 @@ async function getWorkpackagesCategories() {
       });
     }
   } catch (error) {
-    alert(error.message)
+    alert(error.message);
   }
 }
 
 async function addWorkpackage() {
   try {
-    store.user = supabase.auth.user()
+    store.user = supabase.auth.user();
 
     const updates = {
       user_id: store.user.id,
-      time_start: (new Date(Date.now())).toISOString(),
-      category: categoriesIdMap.value.get(model.value)
+      time_start: new Date(Date.now()).toISOString(),
+      category: categoriesIdMap.value.get(model.value),
     };
 
-    let { error } = await supabase.from("workpackage").upsert(updates, {
-      returning: "minimal", // Don't return the value after inserting
+    const { error } = await supabase.from('workpackage').upsert(updates, {
+      returning: 'minimal', // Don't return the value after inserting
     });
 
     getUnfinishedWorkpackage();
@@ -247,21 +264,24 @@ async function addWorkpackage() {
     if (error) throw error;
   } catch (error) {
     workingToggle.value = false;
-    alert(error.message)
+    alert(error.message);
   }
 }
 
 async function finishWorkpackage(id) {
   try {
-    store.user = supabase.auth.user()
+    store.user = supabase.auth.user();
 
     const updates = {
-      time_end: (new Date(Date.now())).toISOString(),
+      time_end: new Date(Date.now()).toISOString(),
     };
 
-    let { error } = await supabase.from("workpackage").update(updates, {
-      returning: "minimal", // Don't return the value after inserting
-    }).eq('id', id);
+    const { error } = await supabase
+      .from('workpackage')
+      .update(updates, {
+        returning: 'minimal', // Don't return the value after inserting
+      })
+      .eq('id', id);
 
     getFinishedWorkpackages();
     getUnfinishedWorkpackage();
@@ -269,7 +289,7 @@ async function finishWorkpackage(id) {
     if (error) throw error;
   } catch (error) {
     workingToggle.value = false;
-    alert(error.message)
+    alert(error.message);
   }
 }
 
@@ -278,14 +298,39 @@ const columns = [
     name: 'category',
     label: 'Kategorie',
     align: 'left',
-    field: row => row.name,
-    format: val => `${val}`,
-    sortable: false
+    field: (row) => row.name,
+    format: (val) => `${val}`,
+    sortable: false,
   },
-  { name: 'date', align: 'center', label: 'Datum', field: 'date', format: val => `${val.toLocaleDateString('de')}`, sortable: false },
-  { name: 'time_start', label: 'Startzeit', field: 'time_start', format: val => `${val.toLocaleTimeString('de')}`, sortable: false },
-  { name: 'time_end', label: 'Endzeit', field: 'time_end', format: val => `${val.toLocaleTimeString('de')}`, sortable: false },
-  { name: 'duration', label: 'Dauer', field: 'duration', format: val => `${(((val / 1000) / 60) / 60).toFixed(1)} Std.`, sortable: false },
+  {
+    name: 'date',
+    align: 'center',
+    label: 'Datum',
+    field: 'date',
+    format: (val) => `${val.toLocaleDateString('de')}`,
+    sortable: false,
+  },
+  {
+    name: 'time_start',
+    label: 'Startzeit',
+    field: 'time_start',
+    format: (val) => `${val.toLocaleTimeString('de')}`,
+    sortable: false,
+  },
+  {
+    name: 'time_end',
+    label: 'Endzeit',
+    field: 'time_end',
+    format: (val) => `${val.toLocaleTimeString('de')}`,
+    sortable: false,
+  },
+  {
+    name: 'duration',
+    label: 'Dauer',
+    field: 'duration',
+    format: (val) => `${(val / 1000 / 60 / 60).toFixed(1)} Std.`,
+    sortable: false,
+  },
 ];
 
 onMounted(async () => {
@@ -298,7 +343,7 @@ onMounted(async () => {
 setInterval(() => {
   getFinishedWorkpackages();
   getUnfinishedWorkpackage();
-}, 5000)
+}, 5000);
 </script>
 
 <style>

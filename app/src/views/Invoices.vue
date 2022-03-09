@@ -32,7 +32,7 @@
       <div class="row" style="width: 80vw; height: 80vh; max-width: 80vw;">
         <q-card class="col">
           <q-card-section class="row items-center q-pb-none">
-            <div class="text-h6">Auftrag #{{ activeInvoiceId }}</div>
+            <div class="text-h6">Auftrag #{{ activeInvoice.id }}</div>
             <q-space />
             <q-btn icon="close" flat round dense v-close-popup />
           </q-card-section>
@@ -41,7 +41,7 @@
             <q-table
               flat
               bordered
-              :rows="activeInvoiceProducts"
+              :rows="activeInvoice.products"
               :columns="invoiceProductsColumns"
               row-key="name"
               selection="multiple"
@@ -66,7 +66,7 @@
           </q-card-section>
 
           <q-card-section class="q-pa-sm">
-            <span class="text-h6">Gesamt: {{ activeTotalCost }}€</span>
+            <span class="text-h6">Gesamt: {{ activeInvoice.total_cost }}€</span>
           </q-card-section>
 
           <q-card-section class="q-pa-sm row q-gutter-sm">
@@ -113,20 +113,12 @@ import { store } from '../store';
 
 const selected = ref([]);
 const rows = ref([]);
+const selectedProducts = ref([]);
 
 const invoiceBlob = ref(null);
 const invoice = ref(null);
-const activeInvoiceId = ref(null);
-const selectedProducts = ref([]);
-const activeInvoiceProducts = ref([]);
-const activeTotalCost = ref(0);
 const watchInvoiceModal = ref(false);
-
-const newPosName = ref('');
-const newPosAmount = ref(0);
-const newPosUnit = ref('');
-const newPosCostPerUnit = ref(0);
-
+const activeInvoice = ref({});
 const invoiceProductsColumns = [
   {
     name: 'name',
@@ -159,6 +151,11 @@ const invoiceProductsColumns = [
   },
 ];
 
+const newPosName = ref('');
+const newPosAmount = ref(0);
+const newPosUnit = ref('');
+const newPosCostPerUnit = ref(0);
+
 const generateInvoicePDF = () => {
   const doc = new jsPDF();
 
@@ -168,9 +165,13 @@ const generateInvoicePDF = () => {
   doc.text('Taubert IT-Services | Otto-Hahn-Straße 30d | 93053 Regensburg', 14, 20);
 
   doc.setFontSize(11);
-  doc.text('Vorname Nachname', 14, 35);
-  doc.text('Musterstraße 20', 14, 41);
-  doc.text('12345 Musterstadt', 14, 47);
+  doc.text(
+    `${activeInvoice.value.client.first_name} ${activeInvoice.value.client.last_name}`,
+    14,
+    35,
+  );
+  doc.text(`${activeInvoice.value.client.address.split(',')[0].trim()}`, 14, 41);
+  doc.text(`${activeInvoice.value.client.address.split(',')[1].trim()}`, 14, 47);
 
   doc.text('Taubert IT-Services', 140, 20);
   doc.text('Otto-Hahn-Straße 30d', 140, 26);
@@ -186,17 +187,17 @@ const generateInvoicePDF = () => {
   doc.setFontSize(11);
   doc.setFont('Helvetica', '');
   doc.text('Rechnungs-Nr.:', 14, 100);
-  doc.text(`M${activeInvoiceId.value}`, 44, 100);
+  doc.text(`M${activeInvoice.value.invoice_id}`, 44, 100);
   doc.text('Auftrags-Nr.:', 14, 106);
-  doc.text(`O${activeInvoiceId.value}`, 44, 106);
+  doc.text(`O${activeInvoice.value.id}`, 44, 106);
   doc.text('Kunden-Nr.:', 14, 112);
-  doc.text(`${activeInvoiceId.value}`, 44, 112);
+  doc.text(`${activeInvoice.value.client_id}`, 44, 112);
 
   doc.text('Rechnungsdatum:', 130, 100);
   doc.text(`${new Date(Date.now()).toLocaleDateString()}`, 170, 100);
 
   let count = 0;
-  const tableBody = activeInvoiceProducts.value.map((p) => {
+  const tableBody = activeInvoice.value.products.map((p) => {
     count += 1;
     return [
       count,
@@ -216,16 +217,20 @@ const generateInvoicePDF = () => {
 
   const pageHeightAfterTable = doc.lastAutoTable.finalY;
   doc.text('Summe Netto:', 130, pageHeightAfterTable + 10);
-  doc.text(`€ ${activeTotalCost.value.toFixed(2)}`, 170, pageHeightAfterTable + 10);
+  doc.text(`€ ${activeInvoice.value.total_cost.toFixed(2)}`, 170, pageHeightAfterTable + 10);
   doc.line(105, pageHeightAfterTable + 13, 195, pageHeightAfterTable + 13);
-  doc.text(`0,00% USt. auf ${activeTotalCost.value.toFixed(2)}€:`, 112, pageHeightAfterTable + 20);
-  doc.text(`€ ${activeTotalCost.value.toFixed(2)}`, 170, pageHeightAfterTable + 20);
+  doc.text(
+    `0,00% USt. auf ${activeInvoice.value.total_cost.toFixed(2)}€:`,
+    112,
+    pageHeightAfterTable + 20,
+  );
+  doc.text(`€ ${activeInvoice.value.total_cost.toFixed(2)}`, 170, pageHeightAfterTable + 20);
   doc.line(105, pageHeightAfterTable + 23, 195, pageHeightAfterTable + 23);
   doc.line(105, pageHeightAfterTable + 24, 195, pageHeightAfterTable + 24);
   doc.setFont('Helvetica', 'bold');
   doc.text('Endsumme:', 130, pageHeightAfterTable + 30);
   doc.setFont('Helvetica', '');
-  doc.text(`€ ${activeTotalCost.value.toFixed(2)}`, 170, pageHeightAfterTable + 30);
+  doc.text(`€ ${activeInvoice.value.total_cost.toFixed(2)}`, 170, pageHeightAfterTable + 30);
   doc.line(105, pageHeightAfterTable + 34, 195, pageHeightAfterTable + 34);
 
   doc.setFontSize(6);
@@ -238,9 +243,17 @@ const generateInvoicePDF = () => {
   invoiceBlob.value = doc.output('bloburi');
   invoice.value = doc;
 };
+const generateOfferPDF = () => {};
+
+const calcTotalCostActiveInvoice = () => {
+  activeInvoice.value.total_cost = 0;
+  activeInvoice.value.products.forEach((e) => {
+    activeInvoice.value.total_cost += e.amount * e.costPerUnit;
+  });
+};
 const removePositionFromInvoice = () => {
   selectedProducts.value.forEach((e) => {
-    activeInvoiceProducts.value = activeInvoiceProducts.value.filter((p) => p !== e);
+    activeInvoice.value.products = activeInvoice.value.products.filter((p) => p !== e);
   });
   selectedProducts.value = [];
 
@@ -248,7 +261,7 @@ const removePositionFromInvoice = () => {
   generateInvoicePDF();
 };
 const insertNewPos = () => {
-  activeInvoiceProducts.value.push({
+  activeInvoice.value.products.push({
     id: (Math.random() * 9999).toFixed(0),
     name: newPosName.value,
     description: '',
@@ -262,19 +275,11 @@ const insertNewPos = () => {
 };
 
 const saveInvoice = () => {
-  invoice.value.save(`rechnung-${activeInvoiceId.value}-${Date.now()}.pdf`);
+  invoice.value.save(`rechnung-M${activeInvoice.value.invoice_id}-${Date.now()}.pdf`);
 };
-const calcTotalCostActiveInvoice = () => {
-  activeTotalCost.value = 0;
-  activeInvoiceProducts.value.forEach((e) => {
-    activeTotalCost.value += e.amount * e.costPerUnit;
-  });
-};
-const editInvoice = (id) => {
-  console.log('edit');
-
-  activeInvoiceId.value = id;
-  activeInvoiceProducts.value = store.invoices[id - 1].products || [];
+const editInvoice = async (id) => {
+  activeInvoice.value = store.invoices[id - 1];
+  activeInvoice.value.client = (await store.requestClientById(store.invoices[id - 1].client_id))[0];
 
   calcTotalCostActiveInvoice();
   generateInvoicePDF();
@@ -284,8 +289,6 @@ const editInvoice = (id) => {
 const deleteInvoice = (id) => {
   console.log('delete', id);
 };
-const generateOfferPDF = (id) => {};
-
 const parseInvoices = async () => {
   if (store.invoices.length == 0) return;
 

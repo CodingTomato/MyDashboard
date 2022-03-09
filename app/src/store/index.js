@@ -14,6 +14,20 @@ export const store = reactive({
       alert(error.message);
     }
   },
+  requestClientById: async (id) => {
+    try {
+      store.user = supabase.auth.user();
+      const { data, error, status } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', id);
+
+      if (error && status !== 406) throw error;
+      if (data) return data;
+    } catch (error) {
+      alert(error.message);
+    }
+  },
 });
 
 export const crypto = reactive({
